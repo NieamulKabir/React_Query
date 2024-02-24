@@ -1,12 +1,19 @@
+/* eslint-disable react/prop-types */
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-const retrieveProducts = async () => {
-  const response = await axios.get(`http://localhost:8000/products`);
+
+const retrieveProducts = async ({ queryKey }) => {
+  const response = await axios.get(`http://localhost:8000/${queryKey[0]}`);
   return response.data;
 };
 
-const ProductList = () => {
+const ProductList = ({setSelectedProductId}) => {
+ 
+  const handleSeeDetails = (productId) => {
+    setSelectedProductId(productId); 
+  };
+
   const {
     data: products,
     error,
@@ -14,6 +21,7 @@ const ProductList = () => {
   } = useQuery({
     queryKey: ["products"],
     queryFn: retrieveProducts,
+    refetchInterval: 1000,
   });
 
   if (isLoading) {
@@ -29,9 +37,25 @@ const ProductList = () => {
       <ul className="flex flex-wrap justify-center items-center">
         {products &&
           products.map((product) => (
-            <li className="flex flex-col items-center m-2 border rounded-lg" key={product.id}>
-              <img className="object-cover h-64 w-64 rounded-sm" src={product.thumbnail} alt={product.title} />
-              <p className="text-xl my-4">{product.title}</p>
+            <li
+              className="flex flex-col items-center m-2 border rounded-lg"
+              key={product.id}
+            >
+              <img
+                className="object-cover h-64 w-64 rounded-sm"
+                src={product.thumbnail}
+                alt={product.title}
+              />
+              <div className="flex justify-around items-center">
+                <p className="text-xl my-4">{product.title}</p>
+                <button
+                  onClick={() => handleSeeDetails(product.id)}
+                  className="bg-gray-600 px-2 py-1 text-white ml-4 rounded-xl"
+                >
+                  See Details
+                </button>
+               
+              </div>
             </li>
           ))}
       </ul>
