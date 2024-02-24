@@ -1,8 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 
 const AddProduct = () => {
+  const queryClient = useQueryClient();
+
   const [state, setState] = useState({
     title: "",
     description: "",
@@ -11,14 +13,18 @@ const AddProduct = () => {
     thumbnail: "",
   });
 
-  const mutation=useMutation({
-    mutationFn: (newProduct) => axios.post("https://localhost:8000/products",newProduct),
+  const mutation = useMutation({
+    mutationFn: (newProduct) =>
+      axios.post("http://localhost:8000/products", newProduct),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+    },
   });
   const submitData = (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const newData = {...state,id:crypto.randomUUID().toString()}
-    mutation.mutate(newData)
+    const newData = { ...state, id: crypto.randomUUID().toString() };
+    mutation.mutate(newData);
   };
   const handleChange = (event) => {
     const name = event.target.name;
@@ -31,6 +37,12 @@ const AddProduct = () => {
       [name]: value,
     });
   };
+  if (mutation.isLoading) {
+    return <span>Submitting...</span>;
+  }
+  if (mutation.isError) {
+    return <span>Error: {mutation.error.message}</span>;
+  }
   return (
     <div className="m-2 p-2 bg-gray-100 w-1/5 h-1/2">
       <h1>Add Product</h1>
